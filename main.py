@@ -128,9 +128,14 @@ def element_strength(bazi: BaZi) -> Dict[str, int]:
     return counts
 
 
-def recommend_numbers(seed: str, counts: Dict[str, int], sets: int = 5):
+def weak_elements_and_pool(counts: Dict[str, int]) -> Tuple[List[str], List[int]]:
     weak = sorted(counts, key=counts.get)[:2]
     pool = [d for e in weak for d in ELEMENT_DIGITS[e]]
+    return weak, pool
+
+
+def recommend_numbers(seed: str, counts: Dict[str, int], sets: int = 5):
+    weak, pool = weak_elements_and_pool(counts)
     seed_hash = hashlib.sha256(seed.encode()).hexdigest()
     rng = random.Random(int(seed_hash, 16))
     result = []
@@ -147,6 +152,22 @@ def parse_datetime(s: str) -> dt.datetime:
         except ValueError:
             pass
     raise ValueError("请输入格式 YYYY-MM-DD HH:MM")
+
+
+def self_check() -> None:
+    fixed_input = "1990-05-17 08:30"
+    dtv = parse_datetime(fixed_input)
+    bazi = compute_bazi(dtv.date(), dtv.time())
+    counts = element_strength(bazi)
+    weak, pool = weak_elements_and_pool(counts)
+
+    print("自我测试模式 (self_check)")
+    print(f"固定输入: {fixed_input}")
+    print(f"偏弱五行: {'、'.join(weak)}")
+    print(f"数字池: {pool}")
+    for i in range(1, 6):
+        number, _ = recommend_numbers(fixed_input, counts, sets=1)[0]
+        print(f"{i}. 推荐号码: {number}")
 
 
 def main():
@@ -170,3 +191,4 @@ def main():
 
 if __name__ == "__main__":
     main()
+
